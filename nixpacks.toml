@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["python311", "gcc", "glib", "nss", "nspr", "atk", "at-spi2-atk", "cups", "dbus", "libdrm", "expat", "xcb-util", "libxkbcommon", "mesa", "alsa-lib", "pango", "cairo", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "xorg.libXcursor", "xorg.libXi", "xorg.libXtst", "libuuid", "libpng", "stdenv.cc.cc.lib"]
+
+[phases.install]
+cmds = [
+  "python -m pip install --upgrade pip",
+  "pip install -r requirements.txt",
+  "PLAYWRIGHT_BROWSERS_PATH=0 python -m playwright install --with-deps chromium"
+]
+
+[start]
+cmd = "./scripts/bootstrap_playwright.sh uvicorn api:app --host 0.0.0.0 --port ${PORT:-5050}"
