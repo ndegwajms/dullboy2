@@ -36,6 +36,7 @@ class VidsrcExtractor:
             ".m3u8",
             "master.m3u8",
             ".mp4",
+            ".mpd",
             "/playlist",
             "/source",
             "/manifest",
@@ -535,6 +536,87 @@ class VidsrcExtractor:
             return source
         return None
 
+    def _extract_stream_urls_from_json(self, payload):
+        urls = []
+        seen = set()
+
+        def remember(url):
+            if not isinstance(url, str):
+                return
+            candidate = url.strip()
+            if not candidate:
+                return
+            lowered = candidate.lower()
+            if any(token in lowered for token in (".m3u8", ".mpd", ".mp4")) and candidate not in seen:
+                seen.add(candidate)
+                urls.append(candidate)
+
+        def walk(value):
+            if isinstance(value, dict):
+                for nested in value.values():
+                    walk(nested)
+            elif isinstance(value, list):
+                for item in value:
+                    walk(item)
+            elif isinstance(value, str):
+                remember(value)
+
+        walk(payload)
+        return urls
+
+    def _resolve_source_pointer(self, source_url, referer_url):
+        if not isinstance(source_url, str) or not source_url.strip():
+            return None
+
+        parsed = urllib.parse.urlparse(source_url)
+        if parsed.scheme not in ("http", "https"):
+            return None
+
+        if "/api/sources" not in parsed.path:
+            return None
+
+        try:
+            response = self.client.get(
+                source_url,
+                headers={
+                    **self.browser_headers,
+                    "Referer": referer_url,
+                    "Accept": "application/json, text/plain, */*",
+                },
+                follow_redirects=True,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Source pointer fetch failed ({source_url}): {e}")
+            return None
+
+    def _resolve_indirect_sources(self, result, referer_url):
+        if not isinstance(result, dict):
+            return result
+
+        sources = result.get("sources")
+        if not isinstance(sources, list):
+            return result
+
+        resolved_urls = []
+        for source in sources:
+            source_url = self._source_url(source)
+            if not source_url:
+                continue
+            payload = self._resolve_source_pointer(source_url, referer_url)
+            if not payload:
+                continue
+            resolved_urls.extend(self._extract_stream_urls_from_json(payload))
+
+        deduped = self._dedupe_sources(resolved_urls)
+        if deduped:
+            result["sources"] = deduped
+            result["detected_via"] = "dulo-source-pointer-resolution"
+            result["resolved_from"] = referer_url
+
+        return result
+
     def _annotate_expiring_sources(self, result):
         if not isinstance(result, dict):
             return result
@@ -736,6 +818,7 @@ class VidsrcExtractor:
         )
         result = self._capture_dulo_runtime_payload(watch_url)
         if result:
+            result = self._resolve_indirect_sources(result, watch_url)
             result = self._annotate_expiring_sources(result)
             cache_ttl = self.stream_cache_ttl
             if result.get("expires_at"):
