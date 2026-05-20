@@ -451,6 +451,7 @@ def root():
     return HTML_DOCS
 
 @app.get("/extract")
+@app.get("/extract/")
 def extract(
     id: str,
     type: str = Query("movie", enum=["movie", "tv", "anime"]),
@@ -470,10 +471,25 @@ def extract(
             episode=episode,
             sub_or_dub=lang
         )
-        
+
         if not result:
-            raise HTTPException(status_code=404, detail="Could not extract sources")
-            
+            result = extractor.get_stream(
+                id=id,
+                is_tv=is_tv,
+                is_anime=is_anime,
+                season=season,
+                episode=episode,
+                sub_or_dub=lang,
+                force_refresh=True,
+            )
+
+        if not result:
+            raise HTTPException(status_code=502, detail={
+                "message": "Could not extract sources",
+                "hint": "Upstream provider/runtime did not expose playable media during capture window",
+                "request": {"id": id, "type": type, "season": season, "episode": episode, "lang": lang},
+            })
+
         return _attach_refresh_metadata(result, id, type, season, episode, lang)
     except FastAPIHTTPException:
         raise
@@ -483,6 +499,7 @@ def extract(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/refresh")
+@app.get("/refresh/")
 def refresh(
     id: str,
     type: str = Query("movie", enum=["movie", "tv", "anime"]),
