@@ -5,7 +5,7 @@ import uvicorn
 import urllib.parse
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
 
-app = FastAPI(title="Dulo Runtime Extractor API", description="Automated runtime extraction for Dulo hash-route watch pages")
+app = FastAPI(title="Vixsrc Runtime Extractor API", description="Automated runtime extraction for Vixsrc hash-route watch pages")
 extractor = VidsrcExtractor()
 
 
@@ -42,7 +42,7 @@ HTML_DOCS = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dulo Extractor API | Documentation</title>
+    <title>Vixsrc Extractor API | Documentation</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -273,23 +273,23 @@ HTML_DOCS = """
 
     <div class="container">
         <header>
-            <div class="tagline">Fast Dulo Extractor</div>
-            <h1>Dulo Extractor</h1>
-            <p class="lead">Browser-backed extraction for Dulo <strong>movie</strong> pages. The extractor opens the hash route format <code>https://dulo.tv/#/movie/&lt;tmdb id&gt;</code>, watches runtime network traffic, and returns stream sources when available.</p>
+            <div class="tagline">Fast Vixsrc Extractor</div>
+            <h1>Vixsrc Extractor</h1>
+            <p class="lead">Browser-backed extraction for Vixsrc <strong>movie</strong> pages. The extractor opens the hash route format <code>https://vixsrc.to/#/movie/&lt;tmdb id&gt;</code>, watches runtime network traffic, and returns stream sources when available.</p>
         </header>
 
         <div class="grid">
             <div class="card">
                 <h2>🎬 Movies</h2>
-                <p>Use a TMDb movie ID and get the runtime stream response from the Dulo route.</p>
+                <p>Use a TMDb movie ID and get the runtime stream response from the Vixsrc route.</p>
                 <div class="endpoint-box">GET /extract?id=385687&type=movie</div>
-                <div class="endpoint-note">Example movie: Fast X. Internally opens https://dulo.tv/#/movie/385687.</div>
+                <div class="endpoint-note">Example movie: Fast X. Internally opens https://vixsrc.to/#/movie/385687.</div>
                 <a href="/extract?id=385687&type=movie" target="_blank" class="btn">Test Endpoint</a>
             </div>
 
             <div class="card">
                 <h2>📺 TV Series</h2>
-                <p>Pass the show ID, season, and episode. TV support uses the Dulo hash-route shape when available.</p>
+                <p>Pass the show ID, season, and episode. TV support uses the Vixsrc hash-route shape when available.</p>
                 <div class="endpoint-box">GET /extract?id=60735&type=tv&season=1&episode=1</div>
                 <div class="endpoint-note">Example TV: The Flash S1E1.</div>
                 <a href="/extract?id=60735&type=tv&season=1&episode=1" target="_blank" class="btn">Test Endpoint</a>
@@ -308,11 +308,11 @@ HTML_DOCS = """
             <h2>How It Works</h2>
             <div class="steps">
                 <p><strong>1.</strong> Open `/extract` with the right query values.</p>
-                <p><strong>2.</strong> The backend opens Dulo in Playwright, clicks the visible play/watch control when needed, follows iframes, and captures source JSON or stream URLs from network traffic.</p>
+                <p><strong>2.</strong> The backend opens Vixsrc in Playwright, clicks the visible play/watch control when needed, follows iframes, and captures source JSON or stream URLs from network traffic.</p>
                 <p><strong>3.</strong> Use the `sources[0].file` or `sources[0].url` URL as the main HLS stream. Subtitle files will be in `tracks`.</p>
                 <p><strong>4.</strong> If the source has `is_expiring`, refresh it with the returned `refresh.url` before `refresh_after` or after playback receives a 401/403.</p>
             </div>
-            <p class="mini">Dulo is a client-side app, so browser automation is required for the hash route and dynamic player requests.</p>
+            <p class="mini">Vixsrc is a client-side app, so browser automation is required for the hash route and dynamic player requests.</p>
         </section>
 
         <section class="section">
@@ -420,7 +420,7 @@ HTML_DOCS = """
             <div class="developer-badge">Developer: <span>Walter</span></div>
             <p class="footer-copy">
                 Backend-only stream extraction with simple endpoints.<br>
-                &copy; 2026 Dulo Extractor Dashboard
+                &copy; 2026 Vixsrc Extractor Dashboard
             </p>
         </section>
     </div>

@@ -11,7 +11,7 @@ from cryptography.hazmat.backends import default_backend
 
 class VidsrcExtractor:
     def __init__(self):
-        self.base_url = os.getenv("DULO_BASE_URL", "https://dulo.tv").rstrip("/")
+        self.base_url = os.getenv("VIDSRC_BASE_URL", "https://vixsrc.to").rstrip("/")
         self.fallback_base_urls = []
         self.browser_headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
@@ -465,10 +465,10 @@ class VidsrcExtractor:
         )
         return vrf
 
-    def _build_dulo_watch_url(self, id, is_tv=False, season=None, episode=None, is_anime=False, sub_or_dub="sub"):
+    def _build_vixsrc_watch_url(self, id, is_tv=False, season=None, episode=None, is_anime=False, sub_or_dub="sub"):
         """
-        Build the client-side Dulo route. Dulo is a hash-router SPA, so the useful
-        route must be opened by a browser as https://dulo.tv/#/movie/<tmdb id>.
+        Build the client-side Vixsrc route. Vixsrc is a hash-router SPA, so the useful
+        route must be opened by a browser as https://vixsrc.to/#/movie/<tmdb id>.
         """
         if is_anime:
             episode_segment = f"/{episode}" if episode is not None else ""
@@ -612,7 +612,7 @@ class VidsrcExtractor:
         deduped = self._dedupe_sources(resolved_urls)
         if deduped:
             result["sources"] = deduped
-            result["detected_via"] = "dulo-source-pointer-resolution"
+            result["detected_via"] = "vixsrc-source-pointer-resolution"
             result["resolved_from"] = referer_url
 
         return result
@@ -657,7 +657,7 @@ class VidsrcExtractor:
 
         return result
 
-    def _capture_dulo_runtime_payload(self, watch_url):
+    def _capture_vixsrc_runtime_payload(self, watch_url):
         stream_urls = []
         tracks = []
         provider_payloads = []
@@ -666,7 +666,7 @@ class VidsrcExtractor:
         try:
             from playwright.sync_api import sync_playwright
         except Exception as e:
-            print(f"Playwright Dulo extraction unavailable: {e}")
+            print(f"Playwright Vixsrc extraction unavailable: {e}")
             return None
 
         def remember_stream_url(url):
@@ -695,7 +695,7 @@ class VidsrcExtractor:
                 for item in value:
                     walk_json(item)
 
-        print("Dulo browser extraction boot:", watch_url)
+        print("Vixsrc browser extraction boot:", watch_url)
         try:
             with sync_playwright() as p:
                 browser = self._launch_playwright_chromium(p)
@@ -763,7 +763,7 @@ class VidsrcExtractor:
                             page.wait_for_timeout(3500)
                             break
                     except Exception as click_error:
-                        print(f"Dulo click candidate skipped ({selector}): {click_error}")
+                        print(f"Vixsrc click candidate skipped ({selector}): {click_error}")
 
                 for frame in page.frames:
                     frame_url = (frame.url or "").strip()
@@ -789,17 +789,17 @@ class VidsrcExtractor:
                         follow_page.wait_for_timeout(4500)
                         follow_page.close()
                     except Exception as iframe_error:
-                        print(f"Dulo iframe follow failed ({iframe_url}): {iframe_error}")
+                        print(f"Vixsrc iframe follow failed ({iframe_url}): {iframe_error}")
 
                 page.wait_for_timeout(2500)
                 browser.close()
         except Exception as e:
-            print(f"Dulo browser extraction failed: {e}")
+            print(f"Vixsrc browser extraction failed: {e}")
             return None
 
         if provider_payloads:
             payload = provider_payloads[0]
-            payload.setdefault("detected_via", "dulo-runtime-json")
+            payload.setdefault("detected_via", "vixsrc-runtime-json")
             payload.setdefault("page", watch_url)
             return payload
 
@@ -816,7 +816,7 @@ class VidsrcExtractor:
                 "sources": sources,
                 "tracks": unique_tracks,
                 "encrypted": False,
-                "detected_via": "dulo-runtime-network-intercept",
+                "detected_via": "vixsrc-runtime-network-intercept",
                 "page": watch_url,
             }
 
@@ -828,7 +828,7 @@ class VidsrcExtractor:
         if not force_refresh and cached and cached["expires_at"] > time.time():
             return self._annotate_expiring_sources(cached["result"])
 
-        watch_url = self._build_dulo_watch_url(
+        watch_url = self._build_vixsrc_watch_url(
             id=id,
             is_tv=is_tv,
             season=season,
@@ -836,7 +836,7 @@ class VidsrcExtractor:
             is_anime=is_anime,
             sub_or_dub=sub_or_dub,
         )
-        result = self._capture_dulo_runtime_payload(watch_url)
+        result = self._capture_vixsrc_runtime_payload(watch_url)
         if result:
             result = self._resolve_indirect_sources(result, watch_url)
             result = self._annotate_expiring_sources(result)
