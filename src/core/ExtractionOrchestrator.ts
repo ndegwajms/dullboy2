@@ -35,10 +35,11 @@ export class ExtractionOrchestrator {
       const playbackTriggered = await PlaybackTrigger.trigger(page);
       diagnostics.update({ playbackTriggered });
 
-      const early = collector.snapshot().streams.length > 0;
+      const earlySnapshot = collector.snapshot();
+      const early = earlySnapshot.streams.length > 0;
       diagnostics.update({ streamDetectedEarly: early, chunkScores: ChunkAnalyzer.rank(chunks) });
 
-      await page.waitForTimeout(1200);
+      await page.waitForTimeout(early ? 250 : 1200);
       await collector.collectRuntime(page);
 
       const imports = await DynamicImportTracker.collect(page);
@@ -52,8 +53,9 @@ export class ExtractionOrchestrator {
         for (const u of match) collector.capture(u, "runtime", 0.7);
       }
 
-      const ranked = StreamRanker.rank(StreamRanker.dedupe(collector.snapshot().streams));
-      const manifests = [...new Set([...collector.snapshot().manifests, ...ranked.filter((s) => s.format !== "mp4").map((s) => s.url)])];
+      const finalSnapshot = collector.snapshot();
+      const ranked = StreamRanker.rank(StreamRanker.dedupe(finalSnapshot.streams));
+      const manifests = [...new Set([...finalSnapshot.manifests, ...ranked.filter((s) => s.format !== "mp4").map((s) => s.url)])];
 
       return {
         success: ranked.length > 0,
@@ -63,7 +65,7 @@ export class ExtractionOrchestrator {
         providers: [...new Set(iframes.map((f) => new URL(f).hostname).filter(Boolean))],
         iframes,
         chunks: [...new Set([...chunks, ...imports])],
-        requests: collector.snapshot().requests,
+        requests: finalSnapshot.requests,
         diagnostics: { ...diagnostics.get(), extractionStrategy: `runtime+network+adaptive; mediaSources=${mediaSources.length}` },
       };
     } catch (error) {
