@@ -1,6 +1,6 @@
-# Dulo Runtime Extractor
+# Vixsrc Runtime Extractor
 
-Simple FastAPI backend for extracting runtime stream data from Dulo watch pages.
+Simple FastAPI backend for extracting runtime stream data from Vixsrc watch pages.
 
 This project resolves the full chain and returns the final JSON with:
 
@@ -21,20 +21,20 @@ You send one request to the API.
 
 The backend then:
 
-1. Opens the Dulo hash route in a real browser, for example `https://dulo.tv/#/movie/385687`
+1. Opens the Vixsrc hash route in a real browser, for example `https://vixsrc.to/#/movie/385687`
 2. Waits for the client-side app to load
 3. Clicks a visible play/watch control when one is present
 4. Follows discovered player iframes
 5. Captures source JSON, HLS/MP4 stream URLs, and subtitle tracks from runtime network traffic
 
-The response includes captured playable links in `sources` when Dulo exposes them during runtime.
+The response includes captured playable links in `sources` when Vixsrc exposes them during runtime.
 
 ## Features
 
 - Movie support
 - TV support
 - Anime support
-- Dulo hash-route support for `https://dulo.tv/#/movie/<tmdb id>`
+- Vixsrc hash-route support for `https://vixsrc.to/#/movie/<tmdb id>`
 - Runtime stream source extraction
 - Expiring HLS/source URL metadata and forced refresh endpoint
 - Subtitle track extraction
@@ -44,7 +44,7 @@ The response includes captured playable links in `sources` when Dulo exposes the
 ## Project Files
 
 - `api.py` - FastAPI app and docs page
-- `extractor.py` - main Dulo browser/runtime extraction logic
+- `extractor.py` - main Vixsrc browser/runtime extraction logic
 - `vrf_generator.py` - legacy standalone VRF generator
 
 ## Requirements
@@ -99,12 +99,12 @@ Query params:
 
 ### Movies
 
-Movies use the TMDb ID in the Dulo route:
+Movies use the TMDb ID in the Vixsrc route:
 
 Examples:
 
-- `385687` -> `https://dulo.tv/#/movie/385687`
-- `559969` -> `https://dulo.tv/#/movie/559969`
+- `385687` -> `https://vixsrc.to/#/movie/385687`
+- `559969` -> `https://vixsrc.to/#/movie/559969`
 
 ### TV Series
 
@@ -222,7 +222,7 @@ Simple rule:
 
 - Anime may return different paths depending on `lang=sub` or `lang=dub`
 - TV requires both `season` and `episode`
-- Movies only need a TMDb `id` and `type=movie`; the extractor opens `https://dulo.tv/#/movie/<id>` internally
+- Movies only need a TMDb `id` and `type=movie`; the extractor opens `https://vixsrc.to/#/movie/<id>` internally
 - Some providers return signed HLS URLs that expire; use the returned `refresh.url` instead of persisting old source URLs
 - Some providers change behavior over time, so extraction logic may need updates later
 
