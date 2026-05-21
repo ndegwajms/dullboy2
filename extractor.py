@@ -732,14 +732,34 @@ class VidsrcExtractor:
                     "a:has-text('Play')",
                     "a:has-text('Watch')",
                     "[aria-label*='Play' i]",
-                    "[class*='play' i]",
+                    "[class*='play' i]:not(svg)",
                     "[class*='watch' i]",
                 ]
+
+                click_blockers = [
+                    ".absolute.inset-0.z-50",
+                    r".fixed.inset-0.z-\[150\]",
+                    "[data-premid-title] .absolute.inset-0",
+                ]
+
+                def wait_for_click_blockers_to_clear(timeout_ms=2200):
+                    for blocker_selector in click_blockers:
+                        try:
+                            blocker = page.locator(blocker_selector).first
+                            if blocker.count() > 0:
+                                blocker.wait_for(state="hidden", timeout=timeout_ms)
+                        except Exception:
+                            continue
+
                 for selector in click_selectors:
                     try:
                         locator = page.locator(selector).first
                         if locator.count() > 0 and locator.is_visible(timeout=1000):
-                            locator.click(timeout=2500)
+                            wait_for_click_blockers_to_clear()
+                            try:
+                                locator.click(timeout=2500)
+                            except Exception:
+                                locator.click(timeout=2500, force=True)
                             page.wait_for_timeout(3500)
                             break
                     except Exception as click_error:
